@@ -34,6 +34,7 @@ class Job:
     def is_valid(self):
         """
         Stub function, this will filter out only valid jobs
+        :param filter: a filter class object from which the element can establish if it is valid
         :return: boolean if a valid job
         """
         return True
