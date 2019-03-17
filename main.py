@@ -114,12 +114,13 @@ class Main:
             # max 10 inquiries per minute
             time.sleep(6)
 
-        # self._logger.debug(self.path_nodes[self.path_start])
+        self._output.info(f"Searching for optimal path")
 
         self._logger.debug("Path found: {}".format(self.path_found))
 
-        for node in self.path_nodes:
-            self._logger.debug(self.path_nodes[node])
+        if self._logger.level == logging.DEBUG:
+            for node in self.path_nodes:
+                self._logger.debug(self.path_nodes[node])
 
         self._logger.debug(f"Size of jobs list is {len(self.job_list)} keys listed below\nkeys {self.job_list.keys()}")
 
@@ -181,7 +182,6 @@ class Main:
                 self.job_list[job] = job_value
                 if previous_node not in self.path_nodes:
                     self.path_nodes[previous_node] = Node(previous_node)
-                    # TODO should this line be indented, if the node already exists, then we shouldn't need to inquire
                     # TODO we should look in our pickle list to see if the values are there, and take if untimed out
                     # testing out if nodes only need to be in if not already in, this seems logical
                     inquiry_queue.append(previous_node)
@@ -216,7 +216,6 @@ class Main:
             the shortest metric out each time
             """
             current_node = path_list.pop(0)
-            self._logger.debug(f"path class type is {type(current_node)}, {current_node}")
             # for each path we find, we look at the first in the list, which is the closest to the end
             self._logger.debug(f"icao for {current_node}")
             """
@@ -240,7 +239,7 @@ class Main:
             else:
                 self._logger.debug(f"Single new path found {new_short_paths}")
                 path_list.append(self.job_list[new_short_paths[0][0]].get_to_icao())
-                if new_short_paths == self.path_finish:
+                if self.job_list[new_short_paths[0][0]].get_to_icao() == self.path_finish:
                     self._logger.debug("We have got to the end")
                     path_found = True
                     self._output.info(f"To Destination {self.path_finish}")
