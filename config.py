@@ -1,26 +1,26 @@
 from pathlib import Path
+import configparser
+
 
 class Config:
     """
     This is the configuration reader for the program
     We need this to be able to be overridden via command line in the future
     """
+    # TODO this class should be the single source of truth for default data. Alter this to change data after __init__
     def __init__(self, config_file):
         path = Path(config_file)
         if path.is_file():
-            with open(config_file,'r') as data:
-                    lines = data.readlines()
-            for line in lines:
-                [key,value] = line.strip().split('=')
-                if key.strip() == "url":
-                    self.url = value
-                elif key.strip() == "access key":
-                    self.access_key = value
-                elif key.strip() == "default icao":
-                    self.icao = value
+            config = configparser.ConfigParser()
+            config.read_file(open(path))
+            self.url = config['SERVER']['url']
+            self.access_key = config['SERVER']['accesskey']
+            self.icao = config['DEFAULTS']['icao']
+            self.icao_destination = config['DEFAULTS']['icao_destination']
+            self.valid_unit_types = config['VALIDITY']['unit_types']
         else:
             raise IOError("File {} does not exist or is not a regular file".format(config_file))
-        if self.url == None or self.access_key == None or self.icao == None:
+        if not self.url or not self.access_key or not self.icao:
             raise ValueError("Config file missing essential element")
 
     def get_url(self):
@@ -31,3 +31,9 @@ class Config:
 
     def get_icao(self):
         return self.icao
+
+    def get_icao_destination(self):
+        return self.icao_destination
+
+    def get_valid_unit_types(self):
+        return self.valid_unit_types

@@ -24,11 +24,12 @@ class Valid:
 Unit Types {self.unit_types}'''
 
     def check_validity(self, job):
-        '''
+        """
         This checks to see if a jbo is valid
         :param job: this is a job class, it will be used to check the criteria
         :return: Boolean if it is valid or not.
-        '''
+        """
+        return True
 
 
 if __name__ == '__main__':

@@ -3,6 +3,8 @@ import urllib.request
 from xml.dom import minidom
 from xml.dom import Node
 from job import Job
+import logging
+
 
 def getText(nodelist):
     rc = ""
@@ -11,18 +13,24 @@ def getText(nodelist):
             rc = rc + node.data
     return rc
 
+
 class Inquiry:
     """
     This is a check to grab information from the FSEconomy servers to get information from a server
     """
+
+    def __del__(self):
+        self._logger.debug('Inquiry object destroyed')
+
     def __init__(self, config, direction, icao=None):
         """
         :param config: a config class object
         :param icao: the 4 letter code for the queried airport
         :param direction: to or from as a boolean (True = from, False = to)
         """
+        self._logger = logging.getLogger('main')
         self.config = config
-        if icao == None:
+        if not icao:
             self.icao = self.config.get_icao()
         else:
             self.icao = icao
@@ -34,6 +42,7 @@ class Inquiry:
         :config: a config class with all the relevant default info
         :return: a dictionary of the Jobs
         """
+        self._logger.debug("Entering inguiry.go")
         # for the test we will do the inquiry then just return the data
         direction = 'jobsfrom'
         if self.direction:
@@ -76,5 +85,6 @@ class Inquiry:
                           node_dict['AircraftId'])
             return_list[new_job.get_id()] = new_job
 
+        self._logger.debug("Returning from inquiry.go")
         # and finally return the list of jobs back to the calling function
         return return_list
