@@ -1,4 +1,6 @@
 import logging
+import jinja2
+import os
 
 TABSIZE = 4
 
@@ -28,7 +30,24 @@ class Job:
         self._logger.debug(self.__str__())
 
     def __str__(self):
-        return {'id': self.id, 'type': self.unit_type}
+        source_data = {
+                        'id': self.id,
+                        'icao': self.from_icao,
+                        'destination': self.to_icao,
+                        'amount': self.amount,
+                        'unit_type': self.unit_type,
+                        'commodity': self.commodity,
+                        'pay': self.pay,
+                        'expires': self.expires,
+                        'pt_assignment': self.pt_assignment,
+                        'trip': self.trip_type,
+                        'aircraft_id': self.aircraft_id
+                       }
+        template_loader = jinja2.FileSystemLoader(searchpath=os.path.dirname(__file__)+'/templates/')
+        template_environment = jinja2.Environment(loader=template_loader)
+        template_file = "job.j2t"
+        template = template_environment.get_template(template_file)
+        return template.render(data=source_data)
 
     def get_from_icao(self):
         return self.from_icao
@@ -57,7 +76,7 @@ class Job:
         :param metric:
         :return:
         """
-        indented = " " * TABSIZE (metric)
+        indented = " " * TABSIZE * metric
         return_string = f"{indented}Job Number: {self.id}" + \
                         f"{indented}From {self.from_icao} to {self.to_icao}" + \
                         f"{indented}{self.amount}{self.commodity}" + \

@@ -1,0 +1,6 @@
+{{ data['icao'] }} to {{ data['destination'] }}
+Job ID {{ data['id'] }}
+Type of cargo {{ data['unit_type'] }}
+Cargo Amount {{ data['amount'] }} {% if "kg" == data['unit_type'] %}kg/s{% endif %}
+Payment ${{ data['pay'] }}
+Expires {{ data['expires'] }}

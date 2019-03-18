@@ -1,3 +1,22 @@
-url=http://server.fseconomy.net/
-access key=123456789A
-default icao=lr0b
+[SERVER]
+url = http://server.fseconomy.net/
+accessKey = 123456789A
+
+[DEFAULTS]
+icao = lr0b
+icao_destination = lrsv
+
+# Put in here values that you want as acceptable/valid. Miss values to filter out those parameters
+[VALIDITY]
+# unit types c for cargo; p for passengers
+unit_types = cp
+# minimum and maximum passengers for any passenger type job
+minimum_passengers = 0
+maximum_passengers = 100
+# minimum and maximum weight for any cargo job
+minimum_cargo = 0
+maximum_cargo = 100
+
+[CACHE]
+# job timeout in (d)ays, (h)ours, (m)inutes
+job_timeout = 24h
