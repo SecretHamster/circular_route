@@ -125,44 +125,7 @@ class Main:
 
         self._logger.debug(f"Size of jobs list is {len(self.job_list)} keys listed below\nkeys {self.job_list.keys()}")
 
-        results = self.find_route()
-
-        # for branch in results.paths_to_leaves():
-        #    for leaf in
-
-        """
-        new_short_paths = self.path_nodes[job_list[path[0]].get_from_icao()].shortest_routes()
-        self._logger.debug(f"new set of paths from {path[0]}: {new_short_paths}")
-        if len(new_short_paths) > 1:
-            first_path = True
-            for paths in new_short_paths:
-                self._logger.debug(f"Adding new path {paths}")
-                if first_path:
-                    first_path = False
-                    path.insert(0, job_list[paths].get_id())
-                else:
-                    new_path = path.copy()
-                    new_path.insert(0, job_list[paths].get_id())
-                    path_list.append(new_path)
-                # and test for final hop
-                if job_list[paths].get_from_icao() == self.path_start:
-                    self.path_found = True
-
-        else:
-            path.insert(0, job_list[new_short_paths[0]].get_id())
-            if job_list[new_short_paths[0]].get_from_icao() == self.path_start:
-                self.path_found = True
-        """
-        '''Here we print out the path'''
-        # TODO increase the output format for more information
-        """
-        self._output(f"Starting ICAO Code {self.path_start}")
-        path_number = 1
-        for path in path_list:
-            for hop in path:
-                self._output.info(f"hop[0]\n{job_list[hop[1].output_hop(1)]}")
-            path_number += 1
-        """
+        self.print_nested_job_list(self.find_route().paths_to_leaves(), self.find_route())
 
     def iterate_job_list(self, current_job_list):
         inquiry_queue = []
@@ -210,7 +173,6 @@ class Main:
         :return: A dictionary of job hops
         """
         self._output.info("Route Found\nNow looking for the path")
-        path_found = False
         # create the treelib for the pathing, add the starting node to it
         routes = treelib.Tree()
         routes.create_node(self.path_start, self.path_start)
@@ -234,7 +196,6 @@ class Main:
         else:
             # no routes found out
             self._output.info("No route could be found")
-
         return routes
 
     def path_add(self, list_of_paths, tree_route):
@@ -256,8 +217,8 @@ class Main:
                         list_of_paths.append(job_id)
                 # otherwise we go down the conventional route of find jobs and adding them to the next list
                 else:
-                    current_job = current_tree_node.tag                                 # id of the new job
-                    current_node = self.job_list[current_job].get_to_icao()             # the icao the new job hops to
+                    current_job = current_tree_node.identifier                          # id of the new job
+                    current_node = self.job_list[current_tree_node.tag].get_to_icao()   # the icao the new job hops to
                     new_short_paths = self.path_nodes[current_node].shortest_routes()   # the links out of that icao
 
                     # for each path we find, we look at the first in the list, which is the closest to the end
@@ -308,6 +269,21 @@ class Main:
                 raise ValueError("path_add new_short_path is empty")
 
         return tree_route
+
+    def print_nested_job_list(self, a, tree_route):
+        """
+        This prints out a group of nested jobs
+        :return: None
+        """
+
+        for x in a:
+            if isinstance(x, list):
+                self.print_nested_job_list(x, tree_route)
+            else:
+                try:
+                    print(self.job_list[tree_route.get_node(x).tag])
+                except KeyError:
+                    print(x)
 
 
 if __name__ == '__main__':
