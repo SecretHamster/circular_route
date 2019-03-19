@@ -202,71 +202,75 @@ class Main:
         self._logger.debug("Searching for the path")
         path_found = False
 
-        while not path_found:
-            if len(list_of_paths) > 0:
-                self._logger.debug(f"Current list of paths to find routes from {list_of_paths}")
-                current_tree_node = tree_route.get_node(list_of_paths.pop(0))  # gets the node of the front of the path
+        while len(list_of_paths) > 0:
+            self._logger.debug(f"Current list of paths to find routes from {list_of_paths}")
+            current_tree_node = tree_route.get_node(list_of_paths.pop(0))  # gets the node of the front of the path
 
-                # the root is a icao node not a job
-                if current_tree_node.is_root():
-                    # we know these jobs will be unique so can safely add them without fear
-                    for path in self.path_nodes[current_tree_node.tag].shortest_routes():
-                        job_id = path[0]
-                        self._logger.debug(f"Adding the node {job_id} to tree and new_short_paths")
-                        tree_route.create_node(job_id, job_id, parent=self.path_start)
-                        list_of_paths.append(job_id)
-                # otherwise we go down the conventional route of find jobs and adding them to the next list
-                else:
-                    current_job = current_tree_node.identifier                          # id of the new job
-                    current_node = self.job_list[current_tree_node.tag].get_to_icao()   # the icao the new job hops to
-                    new_short_paths = self.path_nodes[current_node].shortest_routes()   # the links out of that icao
+            # the root is a icao node not a job
+            if current_tree_node.is_root():
+                # we know these jobs will be unique so can safely add them without fear
+                for path in self.path_nodes[current_tree_node.tag].shortest_routes():
+                    job_id = path[0]
+                    self._logger.debug(f"Adding the node {job_id} to tree and new_short_paths")
+                    tree_route.create_node(job_id, job_id, parent=self.path_start)
+                    list_of_paths.append(job_id)
+            # otherwise we go down the conventional route of find jobs and adding them to the next list
+            else:
+                current_job = current_tree_node.identifier                          # id of the new job
+                current_node = self.job_list[current_tree_node.tag].get_to_icao()   # the icao the new job hops to
+                new_short_paths = self.path_nodes[current_node].shortest_routes()   # the links out of that icao
 
-                    # for each path we find, we look at the first in the list, which is the closest to the end
-                    self._logger.debug(f"icao for {current_node}")
-                    """
-                    we then retrieve the job referring to the job in the path and the tree node from thatwe then look at
-                    the next hop in the list and so forth
-                    We need to add the next node in the list, if it does not already exist and add this route to its
-                    list
-                    """
-                    self._logger.debug(f"Links from node {current_node} is/are {new_short_paths}")
-                    # when we get back multiple rules
-                    if len(new_short_paths) > 0:
-                        # first_path = True
-                        for paths in new_short_paths:
-                            self._logger.debug(f"Multiple new path found {paths[0]}")
-                            itr = 0
-                            job_identifier = f"{paths[0]}_{itr}"
-                            # make sure we have a unique id for this hop
-                            while job_identifier in tree_route:
-                                itr += 1
-                                job_identifier = f"{paths[0]}_{itr}"
-                            self._logger.debug(f"New identifier is {job_identifier}")
-                            list_of_paths.append(job_identifier)    # add new jobs to path query list
-                            tree_route.create_node(paths[0], job_identifier, parent=current_job) # insert into tree
-                            # and test for final hop
-                            if self.job_list[paths[0]].get_to_icao() == self.path_finish:
-                                self._logger.debug("We have got to the end")
-                                path_found = True
-                                self._output.info(f"To Destination {self.path_finish}")
-                    else:
-                        self._logger.debug(f"Single new path found {self.job_list[new_short_paths[0][0]]}")
+                # for each path we find, we look at the first in the list, which is the closest to the end
+                self._logger.debug(f"icao for {current_node}")
+                """
+                we then retrieve the job referring to the job in the path and the tree node from thatwe then look at
+                the next hop in the list and so forth
+                We need to add the next node in the list, if it does not already exist and add this route to its
+                list
+                """
+                self._logger.debug(f"Links from node {current_node} is/are {new_short_paths}")
+                # when we get back multiple rules
+                if len(new_short_paths) > 0:
+                    # first_path = True
+                    for paths in new_short_paths:
+                        self._logger.debug(f"Multiple new path found {paths[0]}")
                         itr = 0
-                        job_identifier = f"{paths[0][0]}_{itr}"
+                        job_identifier = f"{paths[0]}_{itr}"
                         # make sure we have a unique id for this hop
                         while job_identifier in tree_route:
                             itr += 1
-                            job_identifier = f"{paths[0][0]}_{itr}"
-                        list_of_paths.append(job_identifier)
-                        tree_route.create_node(paths[0][0], job_identifier, parent=current_job.id)
+                            job_identifier = f"{paths[0]}_{itr}"
+                        self._logger.debug(f"New identifier is {job_identifier}")
+                        if paths[1] > 1:
+                            # The metric is bigger than one so there is at least one more hop
+                            list_of_paths.append(job_identifier)    # add new jobs to path query list
+                        tree_route.create_node(paths[0], job_identifier, parent=current_job) # insert into tree
                         # and test for final hop
-                        if self.job_list[new_short_paths[0][0]].get_to_icao() == self.path_finish:
+
+                        if self.job_list[paths[0]].get_to_icao() == self.path_finish:
                             self._logger.debug("We have got to the end")
                             path_found = True
                             self._output.info(f"To Destination {self.path_finish}")
-            else:
-                self._logger.error("Tried to path an empty list in path_add")
-                raise ValueError("path_add new_short_path is empty")
+
+                else:
+                    self._logger.debug(f"Single new path found {self.job_list[new_short_paths[0][0]]}")
+                    itr = 0
+                    job_identifier = f"{paths[0][0]}_{itr}"
+                    # make sure we have a unique id for this hop
+                    while job_identifier in tree_route:
+                        itr += 1
+                        job_identifier = f"{paths[0][0]}_{itr}"
+                    list_of_paths.append(job_identifier)
+                    tree_route.create_node(paths[0][0], job_identifier, parent=current_job.id)
+                    # and test for final hop
+                    if self.job_list[new_short_paths[0][0]].get_to_icao() == self.path_finish:
+                        self._logger.debug("We have got to the end")
+                        path_found = True
+                        self._output.info(f"To Destination {self.path_finish}")
+
+        if not path_found:
+            self._logger.error("We didn't seem to find an end path")
+            raise ValueError("Finishing without a path ending")
 
         return tree_route
 
